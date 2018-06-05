@@ -6,6 +6,8 @@ from flask_restful import fields, marshal_with
 from dateutil import parser
 from datetime import date
 
+from uszipcode import ZipcodeSearchEngine
+
 app = Flask(__name__)
 api = Api(app)
 
@@ -27,6 +29,24 @@ ICE = {
         70: 4
     }
 }
+
+
+def get_lat_long(zipcode):
+    """Retrieve Latitude and Longitude from the zip code
+    (US only).
+
+    Needed to query Dark Sky API
+
+    Args:
+        zipcode (INT): five-digits zip code
+
+    Returns:
+        STR: "Lat,Long"
+    """
+    search = ZipcodeSearchEngine()
+    zipcode = search.by_zipcode(str(zipcode))
+
+    return str(zipcode.Latitude) + "," + str(zipcode.Longitude)
 
 
 class Shipment(object):
@@ -52,6 +72,12 @@ class Shipment(object):
     """
 
     def calc_max_T(self):
+        """For given departure and destination zip codes,
+        calculate the max Temperature.
+
+        Needs to be updated from the weather api
+        """
+
         if self.dep_zip and self.dest_zip:
             T = 80
         else:
@@ -103,7 +129,7 @@ class Ship(Resource):
     The object is an instance of the class Shipment
 
     Following class methods:
-    * get
+    * post
     """
 
     @marshal_with(resource_fields)
