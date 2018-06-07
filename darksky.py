@@ -62,20 +62,22 @@ def get_max_T(response):
 
 def get_time_at_max_T(response):
     time = response['daily']['data'][0]['temperatureMaxTime']
-    timezone = tz.gettz(g['timezone'])
+    timezone = tz.gettz(response['timezone'])
+
     return datetime.datetime.fromtimestamp(time, timezone)
 
 
-zipcode = "11201"
-the_date = date.today()
+def test_api():
+    zipcode = "11201"
+    the_date = date.today()
 
-url = make_url(dskey, zipcode, the_date)
-g = get(url).json()
-print(g)
-timezone = tz.gettz(g['timezone'])
+    url = make_url(dskey, zipcode, the_date)
+    g = get(url).json()
+    # print(g)
+    timezone = tz.gettz(g['timezone'])
 
-for hour in g['hourly']['data']:
-    print(datetime.datetime.fromtimestamp(hour['time'], timezone), hour['temperature'])
+    for hour in g['hourly']['data']:
+        print(datetime.datetime.fromtimestamp(hour['time'], timezone), hour['temperature'])
 
-print(get_time_at_max_T(g))
-print(get_max_T(g))
+    print(get_time_at_max_T(g))
+    print(get_max_T(g))
