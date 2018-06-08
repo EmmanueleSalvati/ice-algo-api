@@ -4,6 +4,7 @@ from uszipcode import ZipcodeSearchEngine
 from datetime import date
 import datetime
 from dateutil import tz
+from dateutil.relativedelta import relativedelta
 
 # Dark SKY key
 with open("dark-sky-key.txt", "r") as k:
@@ -41,12 +42,13 @@ def make_url(dskey, zipcode, the_date):
     """Create url for DarkSKY based on zipcode
 
     Args:
-        dskey (TYPE): Description
-        zipcode (TYPE): Description
-
+        dskey (STR): api key
+        zipcode (STR): zip code
+        the_date (DATETIME.DATE): date
     Returns:
-        TYPE: Description
+        STR: url for the api call
     """
+
     latlong = get_lat_long(zipcode)
     unixtime = date_to_unix(the_date)
     w = 'https://api.darksky.net/forecast/' + \
@@ -57,14 +59,81 @@ def make_url(dskey, zipcode, the_date):
 
 
 def get_max_T(response):
+    """Return the maximum temperature from the api
+
+    Args:
+        response (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     return response['daily']['data'][0]['temperatureMax']
 
 
 def get_time_at_max_T(response):
+    """Get the time for the max Temperature.
+    Not really needed, just for testing
+
+    Args:
+        response (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
     time = response['daily']['data'][0]['temperatureMaxTime']
     timezone = tz.gettz(response['timezone'])
 
     return datetime.datetime.fromtimestamp(time, timezone)
+
+
+def call_api(zipcode, the_date):
+    """Call Dark SKY api
+
+    Args:
+        zipcode (STR): Description
+        the_date (DATETIME.DATE): Description
+
+    Returns:
+        TYPE: Description
+    """
+
+    url = make_url(dskey, zipcode, the_date)
+    g = get(url).json()
+
+    return g
+
+
+def create_api_queries(dep_zip, dest_zip, dep_date):
+    """Create four queries:
+    departure location + departure date
+    departure location + estimated arrival date (1 day after departure)
+    destination location + departure date
+    destination location + estimated arrival date (1 day after departure)
+
+    Args:
+        dep_zip (STR): Description
+        dest_zip (STR): Description
+        dep_date (DATETIME.DATE): Description
+    """
+
+    dest_date = dep_date + relativedelta(days=1)
+    q1 = make_url(dskey, dep_zip, dep_date)
+    q2 = make_url(dskey, dep_zip, dest_date)
+    q3 = make_url(dskey, dest_zip, dep_date)
+    q4 = make_url(dskey, dest_zip, dest_date)
+
+    return (q1, q2, q3, q4)
+
+
+def get_weather(dep_zip, dest_zip, dep_date):
+    """Summary
+
+    Args:
+        dep_zip (TYPE): Description
+        dest_zip (TYPE): Description
+        dep_date (TYPE): Description
+    """
+    pass
 
 
 def test_api():
