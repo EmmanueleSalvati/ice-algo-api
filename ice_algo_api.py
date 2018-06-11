@@ -2,11 +2,10 @@ from flask import Flask
 from flask_restful import Resource, Api
 from flask_restful import reqparse
 from flask_restful import fields, marshal_with
+from darksky import get_weather
 
 from dateutil import parser
 from datetime import date
-
-from uszipcode import ZipcodeSearchEngine
 
 app = Flask(__name__)
 api = Api(app)
@@ -31,24 +30,6 @@ ICE = {
 }
 
 
-def get_lat_long(zipcode):
-    """Retrieve Latitude and Longitude from the zip code
-    (US only).
-
-    Needed to query Dark Sky API
-
-    Args:
-        zipcode (INT): five-digits zip code
-
-    Returns:
-        STR: "Lat,Long"
-    """
-    search = ZipcodeSearchEngine()
-    zipcode = search.by_zipcode(str(zipcode))
-
-    return str(zipcode.Latitude) + "," + str(zipcode.Longitude)
-
-
 class Shipment(object):
 
     """Encode a shipment, with the following:
@@ -71,9 +52,27 @@ class Shipment(object):
     * query ice weight
     """
 
+    def query_weather_api(self):
+        """
+        Set the maximum T, by querying the weather api with the following
+        parameters:
+        departure zip code
+        destination zip code
+        departure date
+        """
+
+        try:
+            T = get_weather(self.dep_zip, self.dest_zip, self.dep_date)
+            self.T = T
+        except NameError:
+            print("ALERT, WEATHER API DID NOT WORK! SETTING DEFAULT TO 80")
+            self.T = 80
+
     def calc_max_T(self):
         """For given departure and destination zip codes,
         calculate the max Temperature.
+
+        ***NEEDS REMOVAL
 
         Needs to be updated from the weather api
         """
@@ -95,14 +94,16 @@ class Shipment(object):
         else:
             return parser.parse(datestr).date()
 
-
-    def __init__(self, ship_n=None, dep_zip=None, dest_zip=None, dep_date=None, f_weight=None):
+    def __init__(self,
+                 ship_n=None, dep_zip=None, dest_zip=None,
+                 dep_date=None, f_weight=None):
         self.ship_n = ship_n
         self.dep_zip = dep_zip
         self.dest_zip = dest_zip
         self.dep_date = self.parse_date(dep_date)
         self.f_weight = f_weight
-        self.calc_max_T()
+        # I need to switch the following line, after interpolation
+        self.calc_max_T()  # self.query_weather_api()
         self.ice_weight()
 
 resource_fields = {
@@ -149,10 +150,10 @@ class Ship(Resource):
         #     ARGS.dep_date, ARGS.f_weight)
 
         s = Shipment(ARGS.ship_n,
-            ARGS.dep_zip,
-            ARGS.dest_zip,
-            ARGS.dep_date,
-            ARGS.f_weight)
+                     ARGS.dep_zip,
+                     ARGS.dest_zip,
+                     ARGS.dep_date,
+                     ARGS.f_weight)
 
         return s
 

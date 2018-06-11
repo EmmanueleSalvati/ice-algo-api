@@ -72,7 +72,8 @@ def get_max_T(response):
 
 def get_time_at_max_T(response):
     """Get the time for the max Temperature.
-    Not really needed, just for testing
+
+    *** NOT NEEDED, JUST FOR TESTING ***
 
     Args:
         response (TYPE): Description
@@ -89,6 +90,8 @@ def get_time_at_max_T(response):
 def call_api(zipcode, the_date):
     """Call Dark SKY api
 
+    ***THIS IS JUST A TEMPLATE. NOT USING IT.***
+
     Args:
         zipcode (STR): Description
         the_date (DATETIME.DATE): Description
@@ -97,6 +100,7 @@ def call_api(zipcode, the_date):
         TYPE: Description
     """
 
+    print(dskey)
     url = make_url(dskey, zipcode, the_date)
     g = get(url).json()
 
@@ -129,11 +133,25 @@ def get_weather(dep_zip, dest_zip, dep_date):
     """Summary
 
     Args:
-        dep_zip (TYPE): Description
-        dest_zip (TYPE): Description
-        dep_date (TYPE): Description
+        dep_zip (STR): Departure zip code
+        dest_zip (STR): Destination zip code
+        dep_date (DATETIME.DATE): Departure date
     """
-    pass
+
+    queries = create_api_queries(dep_zip, dest_zip, dep_date)
+    weathers = tuple([get(url).json() for url in queries])
+    local_temps = [get_max_T(response) for response in weathers]
+
+    return max(local_temps)
+
+
+def test_get_weather():
+    dep_zip = "15006"  # "90003"
+    dest_zip = "11201"
+    dep_date = date.today()
+
+    t = get_weather(dep_zip, dest_zip, dep_date)
+    return t
 
 
 def test_api():
@@ -142,7 +160,6 @@ def test_api():
 
     url = make_url(dskey, zipcode, the_date)
     g = get(url).json()
-    # print(g)
     timezone = tz.gettz(g['timezone'])
 
     for hour in g['hourly']['data']:
