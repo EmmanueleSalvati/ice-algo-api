@@ -1,3 +1,14 @@
+"""
+Python3 needed.
+Make sure you install the libraries listed in requirements.txt:
+```pip3 install -r requirements.txt```
+
+Then simply run ```python3 ice_algo_api.py``` to run the api
+
+Look at ```query_ice_algo_api.py``` for an example usage:
+```python3 query_ice_algo_api.py```
+"""
+
 from flask import Flask
 from flask_restful import Resource, Api
 from flask_restful import reqparse
@@ -13,7 +24,7 @@ from scipy import interpolate
 app = Flask(__name__)
 api = Api(app)
 
-# This is temporary, will be replaced by db
+# This is the result of the heat chamber. See below for nterpolated values.
 ICE = {
     4.5: {
         100: 8,
@@ -32,6 +43,7 @@ ICE = {
     }
 }
 
+# Interpolation
 x = [70, 80, 100]
 xnew = np.arange(70, 100, 0.1)
 
@@ -125,8 +137,7 @@ class Shipment(object):
     def ice_weight(self):
         food = self.f_weight
         T = self.T
-        self.ice = INTERP_ICE[food][T]
-        # self.ice = ICE[food][T]
+        self.ice = INTERP_ICE[food][T]  # = ICE[food][T]
 
     def parse_date(self, datestr):
         if datestr is None:
@@ -142,8 +153,7 @@ class Shipment(object):
         self.dest_zip = dest_zip
         self.dep_date = self.parse_date(dep_date)
         self.f_weight = f_weight
-        # I need to switch the following line, after interpolation
-        self.query_weather_api()  # self.calc_max_T()  #
+        self.query_weather_api()  # self.calc_max_T() backup if no interp.
         self.ice_weight()
 
 resource_fields = {
