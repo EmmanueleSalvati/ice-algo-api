@@ -7,6 +7,9 @@ from darksky import get_weather
 from dateutil import parser
 from datetime import date
 
+import numpy as np
+from scipy import interpolate
+
 app = Flask(__name__)
 api = Api(app)
 
@@ -27,6 +30,42 @@ ICE = {
         80: 4,
         70: 4
     }
+}
+
+x = [70, 80, 100]
+xnew = np.arange(70, 100, 0.1)
+
+y4 = [4, 8, 8]
+f4 = interpolate.interp1d(x, y4)
+y8 = [4, 4, 4]
+f8 = interpolate.interp1d(x, y8)
+y14 = [4, 4, 4]
+f14 = interpolate.interp1d(x, y14)
+
+ynew4 = f4(xnew)   # use interpolation function returned by `interp1d`
+ynew8 = f8(xnew)
+ynew14 = f14(xnew)
+
+
+def find_closest_even_int(num):
+    """
+    Return the closest even number. Used for rounding the ice weight
+    to multiples of 2 lbs
+    """
+
+    floor = np.floor(num)
+    ceil = np.ceil(num)
+
+    if floor % 2 == 0:
+        return floor
+    else:
+        return ceil
+
+
+INTERP_ICE = {
+    4.5: {np.round(x, 1): find_closest_even_int(y) for (x, y) in zip(xnew, ynew4)},
+    8.5: {np.round(x, 1): find_closest_even_int(y) for (x, y) in zip(xnew, ynew8)},
+    14: {np.round(x, 1): find_closest_even_int(y) for (x, y) in zip(xnew, ynew14)}
 }
 
 
@@ -63,7 +102,7 @@ class Shipment(object):
 
         try:
             T = get_weather(self.dep_zip, self.dest_zip, self.dep_date)
-            self.T = T
+            self.T = np.round(T, 1)
         except NameError:
             print("ALERT, WEATHER API DID NOT WORK! SETTING DEFAULT TO 80")
             self.T = 80
@@ -86,7 +125,8 @@ class Shipment(object):
     def ice_weight(self):
         food = self.f_weight
         T = self.T
-        self.ice = ICE[food][T]
+        self.ice = INTERP_ICE[food][T]
+        # self.ice = ICE[food][T]
 
     def parse_date(self, datestr):
         if datestr is None:
@@ -103,7 +143,7 @@ class Shipment(object):
         self.dep_date = self.parse_date(dep_date)
         self.f_weight = f_weight
         # I need to switch the following line, after interpolation
-        self.calc_max_T()  # self.query_weather_api()
+        self.query_weather_api()  # self.calc_max_T()  #
         self.ice_weight()
 
 resource_fields = {
