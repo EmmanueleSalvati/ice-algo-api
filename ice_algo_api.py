@@ -25,6 +25,7 @@ app = Flask(__name__)
 api = Api(app)
 
 # This is the result of the heat chamber. See below for nterpolated values.
+# This dictionary is not actually used.
 ICE = {
     4.5: {
         100: 8,
@@ -43,20 +44,32 @@ ICE = {
     }
 }
 
-# Interpolation
-x = [70, 80, 100]
-xnew = np.arange(70, 100, 0.1)
+# Old 1D Interpolation
+# x = [70, 80, 100]
+# xnew = np.arange(70, 100, 0.1)
 
-y4 = [4, 8, 8]
-f4 = interpolate.interp1d(x, y4)
-y8 = [4, 4, 4]
-f8 = interpolate.interp1d(x, y8)
-y14 = [4, 4, 4]
-f14 = interpolate.interp1d(x, y14)
+# y4 = [4, 8, 8]
+# f4 = interpolate.interp1d(x, y4)
+# y8 = [4, 4, 4]
+# f8 = interpolate.interp1d(x, y8)
+# y14 = [4, 4, 4]
+# f14 = interpolate.interp1d(x, y14)
 
-ynew4 = f4(xnew)   # use interpolation function returned by `interp1d`
-ynew8 = f8(xnew)
-ynew14 = f14(xnew)
+# ynew4 = f4(xnew)   # use interpolation function returned by `interp1d`
+# ynew8 = f8(xnew)
+# ynew14 = f14(xnew)
+
+# 2D interpolation
+weights = [3.5, 4.55, 8.54, 14.35, 19.25]
+temps = [0, 50, 70, 80, 100, 200]
+
+ice = [[0, 2, 4, 8, 8, 8],  # 3.5
+       [0, 2, 4, 8, 8, 8],  # 4.55
+       [0, 0, 4, 4, 4, 4],  # 8.54
+       [0, 0, 4, 4, 4, 4],  # 14.35
+       [0, 0, 4, 4, 4, 4]]  # 19.25
+
+interp_ice = interpolate.interp2d(temps, weights, ice)
 
 
 def find_closest_even_int(num):
@@ -74,11 +87,11 @@ def find_closest_even_int(num):
         return ceil
 
 
-INTERP_ICE = {
-    4.5: {np.round(x, 1): find_closest_even_int(y) for (x, y) in zip(xnew, ynew4)},
-    8.5: {np.round(x, 1): find_closest_even_int(y) for (x, y) in zip(xnew, ynew8)},
-    14: {np.round(x, 1): find_closest_even_int(y) for (x, y) in zip(xnew, ynew14)}
-}
+# INTERP_ICE = {
+#     4.5: {np.round(x, 1): find_closest_even_int(y) for (x, y) in zip(xnew, ynew4)},
+#     8.5: {np.round(x, 1): find_closest_even_int(y) for (x, y) in zip(xnew, ynew8)},
+#     14: {np.round(x, 1): find_closest_even_int(y) for (x, y) in zip(xnew, ynew14)}
+# }
 
 
 class Shipment(object):
@@ -135,9 +148,14 @@ class Shipment(object):
         self.T = T
 
     def ice_weight(self):
+        """Summary
+        Calculate ice weight from the 2D interpolation
+        """
+
         food = self.f_weight
         T = self.T
-        self.ice = INTERP_ICE[food][T]  # = ICE[food][T]
+        self.ice = find_closest_even_int(interp_ice(T, food))
+        # self.ice = INTERP_ICE[food][T]  # Old 1D interpolation
 
     def parse_date(self, datestr):
         if datestr is None:
