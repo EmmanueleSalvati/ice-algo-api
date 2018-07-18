@@ -103,12 +103,9 @@ class Shipment(object):
     destination zip code
     departure date/time
     arrival date/time
-    hours of travel
     temperature
     food weight
     ice weight
-    box size
-    liner type
 
     Following class methods:
     * query_weather_api
@@ -131,21 +128,6 @@ class Shipment(object):
         except NameError:
             print("ALERT, WEATHER API DID NOT WORK! SETTING DEFAULT TO 80")
             self.T = 80
-
-    def calc_max_T(self):
-        """For given departure and destination zip codes,
-        calculate the max Temperature.
-
-        ***NEEDS REMOVAL
-
-        Needs to be updated from the weather api
-        """
-
-        if self.dep_zip and self.dest_zip:
-            T = 80
-        else:
-            T = 80
-        self.T = T
 
     def ice_weight(self):
         """Summary
@@ -171,7 +153,7 @@ class Shipment(object):
         self.dest_zip = dest_zip
         self.dep_date = self.parse_date(dep_date)
         self.f_weight = f_weight
-        self.query_weather_api()  # self.calc_max_T() backup if no interp.
+        self.query_weather_api()
         self.ice_weight()
 
 resource_fields = {
@@ -213,9 +195,6 @@ class Ship(Resource):
         """
 
         ARGS = PARSER.parse_args()
-        # print("Passing these:",
-        #     ARGS.ship_n, ARGS.dep_zip, ARGS.dest_zip,
-        #     ARGS.dep_date, ARGS.f_weight)
 
         s = Shipment(ARGS.ship_n,
                      ARGS.dep_zip,
