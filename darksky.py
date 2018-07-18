@@ -38,18 +38,20 @@ def date_to_unix(the_date):
     return the_date.strftime("%s")
 
 
-def make_url(dskey, zipcode, the_date):
-    """Create url for DarkSKY based on zipcode
+# def make_url(dskey, zipcode, the_date):
+def make_url(dskey, lat, lgtd, the_date):
+    """Create url for DarkSKY based on lat, long
 
     Args:
         dskey (STR): api key
-        zipcode (STR): zip code
+        lat (STR): latitude
+        lgtd (STR): longitude
         the_date (DATETIME.DATE): date
     Returns:
         STR: url for the api call
     """
 
-    latlong = get_lat_long(zipcode)
+    latlong = str(lat) + "," + str(lgtd)  # get_lat_long(zipcode)
     unixtime = date_to_unix(the_date)
     w = 'https://api.darksky.net/forecast/' + \
         str(dskey) + '/' +\
@@ -87,13 +89,14 @@ def get_time_at_max_T(response):
     return datetime.datetime.fromtimestamp(time, timezone)
 
 
-def call_api(zipcode, the_date):
+def call_api(lat, lgtd, the_date):
     """Call Dark SKY api
 
     ***THIS IS JUST A TEMPLATE. NOT USING IT.***
 
     Args:
-        zipcode (STR): Description
+        lat (STR): Latitude
+        lgtd (STR): Longitude
         the_date (DATETIME.DATE): Description
 
     Returns:
@@ -101,13 +104,14 @@ def call_api(zipcode, the_date):
     """
 
     print(dskey)
-    url = make_url(dskey, zipcode, the_date)
+    url = make_url(dskey, lat, lgtd, the_date)
     g = get(url).json()
 
     return g
 
 
-def create_api_queries(dep_zip, dest_zip, dep_date):
+# def create_api_queries(dep_zip, dest_zip, dep_date):
+def create_api_queries(dep_lat, dep_long, dest_lat, dest_long, dep_date):
     """Create four queries:
     departure location + departure date
     departure location + estimated arrival date (1 day after departure)
@@ -121,24 +125,33 @@ def create_api_queries(dep_zip, dest_zip, dep_date):
     """
 
     dest_date = dep_date + relativedelta(days=1)
-    q1 = make_url(dskey, dep_zip, dep_date)
-    q2 = make_url(dskey, dep_zip, dest_date)
-    q3 = make_url(dskey, dest_zip, dep_date)
-    q4 = make_url(dskey, dest_zip, dest_date)
+    # q1 = make_url(dskey, dep_zip, dep_date)
+    # q2 = make_url(dskey, dep_zip, dest_date)
+    # q3 = make_url(dskey, dest_zip, dep_date)
+    # q4 = make_url(dskey, dest_zip, dest_date)
+    q1 = make_url(dskey, dep_lat, dep_long, dep_date)
+    q2 = make_url(dskey, dep_lat, dep_long, dest_date)
+    q3 = make_url(dskey, dest_lat, dest_long, dep_date)
+    q4 = make_url(dskey, dest_lat, dest_long, dest_date)
 
     return (q1, q2, q3, q4)
 
 
-def get_weather(dep_zip, dest_zip, dep_date):
+# def get_weather(dep_zip, dest_zip, dep_date):
+def get_weather(dep_lat, dep_long, dest_lat, dest_long, dep_date):
     """Summary
 
     Args:
-        dep_zip (STR): Departure zip code
-        dest_zip (STR): Destination zip code
+        dep_lat (STR): Departure latitude
+        dep_long (STR): Departure longitude
+        dest_lat (STR): Destination latitude
+        dest_long (STR): Destination longitude
         dep_date (DATETIME.DATE): Departure date
     """
 
-    queries = create_api_queries(dep_zip, dest_zip, dep_date)
+    # queries = create_api_queries(dep_zip, dest_zip, dep_date)
+    queries = \
+        create_api_queries(dep_lat, dep_long, dest_lat, dest_long, dep_date)
     weathers = tuple([get(url).json() for url in queries])
     local_temps = [get_max_T(response) for response in weathers]
 
@@ -146,19 +159,25 @@ def get_weather(dep_zip, dest_zip, dep_date):
 
 
 def test_get_weather():
-    dep_zip = "15006"  # "90003"
-    dest_zip = "11201"
+    dep_lat = "33.9657994"  # "90003"
+    dep_long = "33.9657994"
+    dest_lat = "40.698677200000006"  # "11201"
+    dest_long = "-73.98594140000002"
     dep_date = date.today()
 
-    t = get_weather(dep_zip, dest_zip, dep_date)
+    # t = get_weather(dep_zip, dest_zip, dep_date)
+    t = get_weather(dep_lat, dep_long, dest_lat, dest_long, dep_date)
     return t
 
 
 def test_api():
-    zipcode = "11201"
+    # zipcode = "11201"
     the_date = date.today()
 
-    url = make_url(dskey, zipcode, the_date)
+    lat = "40.698677200000006"
+    lgtd = "-73.98594140000002"
+
+    url = make_url(dskey, lat, lgtd, the_date)
     g = get(url).json()
     timezone = tz.gettz(g['timezone'])
 

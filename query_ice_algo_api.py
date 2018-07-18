@@ -4,8 +4,10 @@ from requests import post
 g = post('http://localhost:5000/',
          data={
             'ship_n': '3384',
-            'dep_zip': 90003,  # 12345,
-            'dest_zip': 11201,
+            'dep_lat': "33.9657994",  # 12345,
+            'dep_long': "-118.27312690000001",
+            'dest_lat': "40.698677200000006",
+            'dest_long': "-73.98594140000002",
             'dep_date': '07-08-2018',
             'f_weight': 7.5}).json()
 print(g)

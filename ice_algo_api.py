@@ -99,18 +99,18 @@ class Shipment(object):
     """Encode a shipment, with the following:
 
     shipment number
-    departure zip code
-    destination zip code
+    departure latitude
+    departure longitude
+    destination latitude
+    destination longitude
     departure date/time
-    arrival date/time
     temperature
     food weight
     ice weight
 
     Following class methods:
     * query_weather_api
-    * calculate max temp
-    * query ice weight
+    * ice weight
     """
 
     def query_weather_api(self):
@@ -123,7 +123,8 @@ class Shipment(object):
         """
 
         try:
-            T = get_weather(self.dep_zip, self.dest_zip, self.dep_date)
+            T = get_weather(self.dep_lat, self.dep_long, self.dest_lat,
+                            self.dest_long, self.dep_date)
             self.T = np.round(T, 1)
         except NameError:
             print("ALERT, WEATHER API DID NOT WORK! SETTING DEFAULT TO 80")
@@ -146,11 +147,15 @@ class Shipment(object):
             return parser.parse(datestr).date()
 
     def __init__(self,
-                 ship_n=None, dep_zip=None, dest_zip=None,
+                 ship_n=None,
+                 dep_lat=None, dep_long=None,
+                 dest_lat=None, dest_long=None,
                  dep_date=None, f_weight=None):
         self.ship_n = ship_n
-        self.dep_zip = dep_zip
-        self.dest_zip = dest_zip
+        self.dep_lat = dep_lat
+        self.dep_long = dep_long
+        self.dest_lat = dest_lat
+        self.dest_long = dest_long
         self.dep_date = self.parse_date(dep_date)
         self.f_weight = f_weight
         self.query_weather_api()
@@ -158,8 +163,10 @@ class Shipment(object):
 
 resource_fields = {
     'ship_n': fields.String,
-    'dep_zip': fields.Integer,
-    'dest_zip': fields.Integer,
+    'dep_lat': fields.String,
+    'dep_long': fields.String,
+    'dest_lat': fields.String,
+    'dest_long': fields.String,
     'dep_date': fields.String,
     'f_weight': fields.Float,
     'T': fields.Float,
@@ -168,8 +175,10 @@ resource_fields = {
 
 PARSER = reqparse.RequestParser()
 PARSER.add_argument('ship_n', type=str)
-PARSER.add_argument('dep_zip', type=int)
-PARSER.add_argument('dest_zip', type=int)
+PARSER.add_argument('dep_lat', type=str)
+PARSER.add_argument('dep_long', type=str)
+PARSER.add_argument('dest_lat', type=str)
+PARSER.add_argument('dest_long', type=str)
 PARSER.add_argument('dep_date', type=str)
 PARSER.add_argument('f_weight', type=float)
 
@@ -197,8 +206,10 @@ class Ship(Resource):
         ARGS = PARSER.parse_args()
 
         s = Shipment(ARGS.ship_n,
-                     ARGS.dep_zip,
-                     ARGS.dest_zip,
+                     ARGS.dep_lat,
+                     ARGS.dep_long,
+                     ARGS.dest_lat,
+                     ARGS.dest_long,
                      ARGS.dep_date,
                      ARGS.f_weight)
 
