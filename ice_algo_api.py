@@ -26,23 +26,23 @@ api = Api(app)
 
 # This is the result of the heat chamber. See below for nterpolated values.
 # This dictionary is not actually used.
-ICE = {
-    4.5: {
-        100: 8,
-        80: 8,
-        70: 4
-    },
-    8.5: {
-        100: 4,
-        80: 4,
-        70: 4
-    },
-    14: {
-        100: 4,
-        80: 4,
-        70: 4
-    }
-}
+# ICE = {
+#     4.5: {
+#         100: 8,
+#         80: 8,
+#         70: 4
+#     },
+#     8.5: {
+#         100: 4,
+#         80: 4,
+#         70: 4
+#     },
+#     14: {
+#         100: 4,
+#         80: 4,
+#         70: 4
+#     }
+# }
 
 # Old 1D Interpolation
 # x = [70, 80, 100]
